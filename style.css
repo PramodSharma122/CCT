@@ -103,25 +103,16 @@
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        font-size: 10px;
+        font-size: 15px;
     }
     .menu-bar .logo{
-        height: auto;
-        padding-left: 30px;
-        width: 100px;
+        width: 170px;
     }
     .navlist {
         display: none;
     }
     .btn-box{
-        font-size: 10px;
-        height: 0px;
-        padding-bottom: 30px;
-        padding-left: 120px;
-    }
-    .btn-box .btn{
-        padding-top: 1px;
-        padding-bottom: 3px;
-        font-size: 10px;
+        padding-left: 30px;
+        align-items: center;
     }
 }
