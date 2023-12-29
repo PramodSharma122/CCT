@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .pro{
+            margin-top: 5px;
+        }
+        .product-title {
+            font-weight: bold;
+            color: blue; 
+        }
+    </style>
+    <script>
+        async function getfake() {
+            const url = 'https://fakestoreapi.com/products';
+            const options = {
+                method: 'GET',
+            };
+            try {
+                const response = await fetch(url, options);
+                const result = await response.json();
+
+                Data(result);
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function Data(data) {
+            const container = document.getElementById('data-container');
+
+            
+            data.forEach(product => {
+                const productDiv = document.createElement('div');
+
+                
+                const titleSpan = document.createElement('span');
+                titleSpan.textContent =`product : `;
+                titleSpan.classList.add('product-title');
+
+                
+                productDiv.appendChild(titleSpan);
+                productDiv.innerHTML += `${product.title } Price: ${product.price}`;
+
+                
+                container.appendChild(productDiv).classList.add("pro");
+            });
+        }
+
+       
+        document.addEventListener('DOMContentLoaded', getfake);
+    </script>
+</head>
+<body>
+    <div id="data-container">
+        <!-- Fetched data will be displayed here -->
+    </div>
+</body>
+</html>
