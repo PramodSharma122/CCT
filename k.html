@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+        }
+
+        #quiz-container {
+            max-width: 600px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .quiz-title {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .quiz-content,
+        .quiz-category,
+        .quiz-difficulty,
+        .quiz-option,
+        .quiz-correctAnswer {
+            margin-bottom: 8px;
+        }
+
+        .quiz-option {
+            cursor: pointer;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .quiz-option:hover {
+            background-color: #f0f0f0;
+        }
+
+        #next-button,
+        #skip-button {
+            background-color: #4caf50;
+            color: #fff;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        #next-button:hover,
+        #skip-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="quiz-container"></div>
+    <button id="skip-button">Skip</button>
+    <button id="next-button">Next</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const url = "https://opentdb.com/api.php?amount=10"
+            const response = await fetch(url);
+            const result = await response.json();
+            const finalResult = result.results;
+            console.log(finalResult);
+
+            const quizContainer = document.getElementById('quiz-container');
+            const nextButton = document.getElementById('next-button');
+            const skipButton = document.getElementById('skip-button');
+
+            let currentIndex = 0;
+
+            function showQuestion(index) {
+                const quizDiv = document.createElement('div');
+                quizDiv.classList.add('quiz-div');
+
+                const quiz = finalResult[index];
+
+                const question = document.createElement('h1');
+                question.classList.add('quiz-title');
+                question.innerHTML = `Question ${index + 1}: ${quiz.question}`;
+
+                const type = document.createElement('p');
+                type.classList.add('quiz-content');
+                type.innerHTML = `Question Type: ${quiz.type}`;
+
+                const category = document.createElement('p');
+                category.classList.add('quiz-category');
+                category.innerHTML = `Category: ${quiz.category}`;
+
+                const difficulty = document.createElement('p');
+                difficulty.classList.add('quiz-difficulty');
+                difficulty.innerHTML = `Difficulty: ${quiz.difficulty}`;
+
+                const correctAnswer = document.createElement('p');
+                correctAnswer.classList.add('quiz-correctAnswer');
+                correctAnswer.innerHTML = `Correct Answer: ${quiz.correct_answer}`;
+
+                const options = [];
+                options.push(quiz.correct_answer);
+                quiz.incorrect_answers.forEach(incorrectAnswer => {
+                    options.push(incorrectAnswer);
+                });
+
+                options.sort(() => Math.random() - 0.5);
+
+                options.forEach((option, index) => {
+                    const optionElement = document.createElement('p');
+                    optionElement.classList.add('quiz-option');
+                    optionElement.innerHTML = `Option ${index + 1}: ${option}`;
+                    quizDiv.appendChild(optionElement);
+
+                    // Add click event to check the selected answer
+                    optionElement.addEventListener('click', () => {
+                        if (option === quiz.correct_answer) {
+                            optionElement.style.backgroundColor = '#8bc34a'; // Correct answer color
+                        } else {
+                            optionElement.style.backgroundColor = '#ff5722'; // Incorrect answer color
+                        }
+                    });
+                });
+
+                // Append elements to quizDiv
+                quizDiv.appendChild(question);
+                quizDiv.appendChild(type);
+                quizDiv.appendChild(category);
+                quizDiv.appendChild(difficulty);
+                quizDiv.appendChild(correctAnswer);
+
+                // Append quizDiv to quizContainer
+                quizContainer.innerHTML = '';
+                quizContainer.appendChild(quizDiv);
+            }
+
+            // Initial question
+            showQuestion(currentIndex);
+
+            // Add click event to the next button
+            nextButton.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % finalResult.length;
+                showQuestion(currentIndex);
+            });
+
+            // Add click event to the skip button
+            skipButton.addEventListener('click', () => {
+                currentIndex = (currentIndex + 1) % finalResult.length;
+                showQuestion(currentIndex);
+            });
+        });
+    </script>
+
+</body>
+
+</html>

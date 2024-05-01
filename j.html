@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Quiz App</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        background-color: lightblue;
+        justify-content: center;
+      }
+      .quiz-option span {
+        color: red;
+      }
+
+      #quiz-container {
+        max-width: 600px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .quiz-title {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+        position: relative;
+        font-weight: bold;
+        padding-left: 10px;
+      }
+
+      .quiz-title::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 5px;
+        bottom: 50%;
+        width: 1px;
+        background-color: #333;
+      }
+
+      #question-count {
+        font-size: 20px;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+
+      .quiz-option-container {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      .quiz-option {
+        cursor: pointer;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        margin-bottom: 8px;
+        transition: background-color 0.3s ease;
+        font-size: 1em;
+        position: relative;
+      }
+
+      .quiz-option span {
+        font-weight: bold;
+        margin-right: 5px;
+      }
+
+      .selected-option {
+        background-color: #add8e6; /* Light blue for selected options */
+      }
+
+      .correct-option {
+        background-color: #7eff82; /* Green for correct options */
+      }
+
+      .incorrect-option {
+        background-color: #ff6f6f; /* Red for incorrect options */
+      }
+
+      #button-container {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+      }
+
+      #next-button,
+      #submit-button,
+      #try-again {
+        background-color: #4caf50;
+        color: #fff;
+        padding: 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        flex: 1; /* Distribute equal width among the buttons */
+        margin: 0 5px;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      #next-button:hover,
+      #submit-button:hover,
+      #try-again:hover {
+        background-color: #45a049;
+      }
+
+      #score-container {
+        font-size: 1.5em;
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="quiz-container">
+      <div class="quiz-title">Quiz App</div>
+      <hr size="5" color="red" />
+      <div id="question-count">Question 1 / 10</div>
+      <div class="quiz-option-container"></div>
+      <div id="button-container">
+        <button id="next-button">Next</button>
+        <button id="submit-button" style="display: none" disabled>
+          Submit
+        </button>
+        <button id="try-again" style="display: none" disabled>Try Again</button>
+      </div>
+      <div id="score-container"></div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", async function () {
+        const url = "https://opentdb.com/api.php?amount=10";
+        const response = await fetch(url);
+        const result = await response.json();
+        const finalResult = result.results;
+
+        const questionCountElement = document.getElementById("question-count");
+        const quizContainer = document.querySelector(".quiz-option-container");
+        const nextButton = document.getElementById("next-button");
+        const submitButton = document.getElementById("submit-button");
+        const tryButton = document.getElementById("try-again");
+        const scoreContainer = document.getElementById("score-container");
+
+        let currentIndex = 0;
+        let userAnswers = new Array(finalResult.length).fill(null);
+        let score = 0;
+        let questionLocked = false;
+
+        function showQuestion(index) {
+          questionCountElement.innerHTML = `Question ${index + 1} / ${
+            finalResult.length
+          }`;
+          questionLocked = false;
+
+          const quizDiv = document.createElement("div");
+          quizDiv.classList.add("quiz-div");
+
+          const quiz = finalResult[index];
+
+          const question = document.createElement("h1");
+          question.classList.add("quiz-title");
+          question.innerHTML = `${index + 1}: ${quiz.question}`;
+
+          const optionsContainer = document.createElement("div");
+          optionsContainer.classList.add("quiz-option-container");
+
+          const options = [];
+          options.push(quiz.correct_answer);
+          quiz.incorrect_answers.forEach((incorrectAnswer) => {
+            options.push(incorrectAnswer);
+          });
+
+          options.sort(() => Math.random() - 0.5);
+
+          options.forEach((option, index) => {
+            const optionElement = document.createElement("p");
+            optionElement.classList.add("quiz-option");
+            optionElement.innerHTML = `<span>${String.fromCharCode(
+              65 + index
+            )}:</span> ${option}`;
+            optionsContainer.appendChild(optionElement);
+
+            optionElement.addEventListener("click", () => {
+              if (!questionLocked) {
+                userAnswers[currentIndex] = option;
+                clearSelectedOptions(optionsContainer);
+                optionElement.classList.add("selected-option");
+              }
+            });
+          });
+
+          quizDiv.appendChild(question);
+          quizDiv.appendChild(optionsContainer);
+
+          quizContainer.innerHTML = "";
+          quizContainer.appendChild(quizDiv);
+        }
+
+        function clearSelectedOptions(container) {
+          const selectedOptions =
+            container.querySelectorAll(".selected-option");
+          selectedOptions.forEach((option) =>
+            option.classList.remove("selected-option")
+          );
+        }
+
+        function updateScore() {
+          score = userAnswers.filter(
+            (answer, i) => answer === finalResult[i].correct_answer
+          ).length;
+        }
+
+        function updateButtonVisibility() {
+          if (currentIndex === finalResult.length - 1) {
+            nextButton.style.display = "none";
+            submitButton.style.display = "inline-block";
+            tryButton.style.display = "inline-block";
+          } else {
+            nextButton.style.display = "inline-block";
+            submitButton.style.display = "none";
+            tryButton.style.display = "none";
+          }
+        }
+
+        function highlightOptions() {
+          questionLocked = true;
+          const optionsContainer = quizContainer.querySelector(
+            ".quiz-option-container"
+          );
+          const options = Array.from(optionsContainer.children);
+
+          // Highlight the selected option
+          options.forEach((optionElement) => {
+            if (
+              userAnswers[currentIndex] ===
+              optionElement.textContent.split(":")[1].trim()
+            ) {
+              optionElement.classList.add("selected-option");
+            }
+          });
+
+          // Highlight the correct and incorrect options
+          options.forEach((optionElement) => {
+            if (
+              optionElement.innerHTML.includes(
+                finalResult[currentIndex].correct_answer
+              )
+            ) {
+              optionElement.classList.add("correct-option");
+            } else if (
+              userAnswers[currentIndex] ===
+              optionElement.textContent.split(":")[1].trim()
+            ) {
+              optionElement.classList.add("incorrect-option");
+            }
+          });
+        }
+
+        showQuestion(currentIndex);
+        updateButtonVisibility();
+
+        nextButton.addEventListener("click", () => {
+          // Check if the user has selected an option for the current question
+          if (userAnswers[currentIndex] === null) {
+            // Display a message to the user
+            const messageElement = document.createElement("p");
+            messageElement.style.color = "red";
+            messageElement.innerHTML =
+              "Please select an option before moving to the next question.";
+            quizContainer.appendChild(messageElement);
+            return; // Exit the function if no option is selected
+          }
+
+          // Highlight options for the current question
+          highlightOptions();
+
+          currentIndex = (currentIndex + 1) % finalResult.length;
+
+          // Remove the highlighting for the next question
+          setTimeout(() => {
+            clearSelectedOptions(
+              quizContainer.querySelector(".quiz-option-container")
+            );
+            showQuestion(currentIndex);
+            updateButtonVisibility();
+          }, 1000); // Wait for 1 second before proceeding to the next question
+        });
+
+        submitButton.addEventListener("click", () => {
+          // Highlight options for the last question before showing the score
+          highlightOptions();
+
+          updateScore();
+          scoreContainer.innerHTML = `Your Score: ${score} / ${finalResult.length}`;
+          scoreContainer.style.display = "block";
+        });
+
+
+        // Enable the submit button only if an answer is selected on the last question
+        quizContainer.addEventListener("click", () => {
+          if (currentIndex === finalResult.length - 1) {
+            const selectedOption =
+              quizContainer.querySelector(".selected-option");
+            submitButton.disabled = selectedOption ? false : true;
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
